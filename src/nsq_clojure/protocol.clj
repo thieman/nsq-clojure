@@ -32,22 +32,26 @@
     (str command "\n" (ascii-size-seq json) json)))
 
 (defn binary-message [command message]
-  (let [binary-data (nippy/freeze message)]
-    (str command "\n" (ascii-size-seq message) message)))
+  (let [data (nippy/freeze message)]
+    (str command "\n"
+         (ascii-size-seq data)
+         (apply str (map char data)))))
 
 (defn multi-binary-message [command messages]
-  (let [message-pair (fn [message] (apply str [(ascii-size-seq message) message]))]
+  (let [binary-messages (map nippy/freeze messages)
+        message-pair (fn [binary-message] (apply str [(ascii-size-seq binary-message)
+                                                      (apply str (map char binary-message))]))]
     (str command "\n"
-         (ascii-from-long (apply + (map count messages)))
-         (ascii-size-seq messages)
-         (apply str (flatten (map message-pair messages))))))
+         (ascii-from-long (apply + (map count binary-messages)))
+         (ascii-size-seq binary-messages)
+         (apply str (flatten (map message-pair binary-messages))))))
 
 (defn parse-message [message-body]
   {:type :message
    :timestamp (long-from-ascii (apply str (take 8 message-body)))
    :attempts (long-from-ascii (apply str (take 2 (drop 8 message-body))))
    :message-id (apply str (take 16 (drop 10 message-body)))
-   :message (apply str (drop 26 message-body))})
+   :message (nippy/thaw (byte-array (map byte (drop 26 message-body))))})
 
 (defn dispatch-on-first-arg [first-arg & more] first-arg)
 (defmulti process-message dispatch-on-first-arg)

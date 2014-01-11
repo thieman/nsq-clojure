@@ -8,4 +8,6 @@
     (cmd/identify conn {})
     (cmd/sub conn "test-topic" "test-channel")
     (cmd/rdy conn 100)
-    (cmd/mpub conn "test-topic" "WHAT UP" "MY HOMIES")))
+    (cmd/pub conn "test-topic" {:z 5})
+    (cmd/pub conn "test-topic" "bacon")
+    (cmd/mpub conn "test-topic" {:a "b" :c 5} "hey there buddy")))

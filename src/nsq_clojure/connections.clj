@@ -1,6 +1,7 @@
 (ns nsq-clojure.connections
   (:require [clojure.core.async :as async]
-            [nsq-clojure.protocol :as protocol])
+            [nsq-clojure.protocol :as protocol]
+            [taoensso.nippy :as nippy])
   (:import [java.net Socket]
            [java.io DataInputStream BufferedInputStream PrintWriter]))
 
