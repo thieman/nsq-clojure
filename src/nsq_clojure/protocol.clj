@@ -6,6 +6,12 @@
 
 (def magic-identifier "  V2")
 
+(defn slice
+  ([string length]
+     (apply str (take length string)))
+  ([string start length]
+     (apply str (take length (drop start string)))))
+
 (defn ascii-from-long [long]
   (let [binary-string (format "%032d" (Long/parseLong (Long/toBinaryString long)))
         longs (map #(Long/parseLong (apply str %) 2) (partition 8 binary-string))]
@@ -48,9 +54,9 @@
 
 (defn parse-message [message-body]
   {:type :message
-   :timestamp (long-from-ascii (apply str (take 8 message-body)))
-   :attempts (long-from-ascii (apply str (take 2 (drop 8 message-body))))
-   :message-id (apply str (take 16 (drop 10 message-body)))
+   :timestamp (long-from-ascii (slice message-body 8))
+   :attempts (long-from-ascii (slice message-body 8 2))
+   :message-id (slice message-body 10 16)
    :message (nippy/thaw (byte-array (map byte (drop 26 message-body))))})
 
 (defn dispatch-on-first-arg [first-arg & more] first-arg)
@@ -68,7 +74,7 @@
   (async/>!! out-channel (parse-message message-body)))
 
 (defn dispatch-response [out-channel message]
-  (let [frame-id (long-from-ascii (apply str (take 4 (drop 4 message))))
+  (let [frame-id (long-from-ascii (slice message 4 4))
         message-body (apply str (drop 8 message))
         message-type (case frame-id
                        0 :response
