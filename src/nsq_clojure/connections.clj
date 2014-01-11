@@ -36,8 +36,11 @@
               (if (<= (count curr-msg) 8)
                 (recur curr-msg)
                 (if (= (count curr-msg) (+ 4 (protocol/message-body-length curr-msg)))
-                  (do (protocol/dispatch-response out-channel curr-msg)
-                      (recur ""))
+                  (if (= (apply str (drop 8 curr-msg)) "_heartbeat_")
+                    (do (write-to-conn conn "NOP\n")
+                        (recur ""))
+                    (do (protocol/dispatch-response out-channel curr-msg)
+                        (recur "")))
                   (recur curr-msg)))))))
 
 (defn make-new-connection [{:keys [host port timeout-ms] :as spec}]
